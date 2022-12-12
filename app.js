@@ -1,6 +1,5 @@
 import express from "express";
 import cors from "cors";
-import bodyParser from "body-parser";
 import mongoose from "mongoose";
 import dotenv from "dotenv";
 dotenv.config();
@@ -10,13 +9,22 @@ import lists from "./lists.js";
 const app = express();
 
 app.use(cors());
-app.use(bodyParser.urlencoded({extended: true}));
-app.use(bodyParser.json());
+app.use(express.json());
 app.use("/lists", lists);
 
 const uri = process.env.ATLAS_URI;
-mongoose.connect(uri, {useNewUrlParser: true, useUnifiedTopology: true})
-.then(() => console.log("Successfully established connection with MongDB database."))
-.catch(err => console.log(err));
+const PORT = process.env.PORT || 5000;
 
-app.listen(5000, () => console.log("server running on port 5000"));
+const connectDatabase = async () => {
+  try {
+    const conn = await mongoose.connect(uri, { useUnifiedTopology: true });
+    console.log(`MongoDB connnected: ${conn.connection.host}`);
+  } catch (error) {
+    console.log(error);
+    process.exit(1);
+  }
+};
+
+connectDatabase().then(() => {
+  app.listen(PORT, () => console.log("server running on port 5000"));
+});
